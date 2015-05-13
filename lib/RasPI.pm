@@ -18,7 +18,7 @@ enum MAP_PROT (
 enum MAP_FLAGS (
   MAP_SHARED => 0x1,
   MAP_PRIVATE => 0x2,
-  MAP_ANON => do given $*DISTRO.name {
+  MAP_ANONYMOUS => do given $*DISTRO.name {
     when 'macosx' { 0x1000 }
     when 'raspbian' { 0x20 }
     default { die "Unknown distro {$*DISTRO.name}" }
@@ -27,7 +27,7 @@ enum MAP_FLAGS (
 
 sub my-open(Str $name, int $flags) returns int is native is symbol('open') is export {*}
 
-sub mmap(OpaquePointer $addr, Int $length, int $prot, int $flags, int $fd, Int $offset)
+sub mmap(OpaquePointer $addr, int $length, int $prot, int $flags, int $fd, int $offset)
   returns OpaquePointer is native is export { * } 
 
 sub munmap(OpaquePointer, Int) returns int is native is export { * }

@@ -30,7 +30,7 @@ enum MAP_FLAGS (
   }
 );
 
-my @physToGPIO = <
+constant @physToGPIO = <
   -1  -1
    2  -1
    3  -1
@@ -53,7 +53,7 @@ my @physToGPIO = <
   -1  21
 >;
 
-my @physNames = <
+constant @physNames = <
    3.3v     5v
    SDA.1    5v
    SCL.1    GND
@@ -76,9 +76,26 @@ my @physNames = <
    GND      GPIO.21
 >;
 
-my int32 $BLOCK_SIZE = 4 * 1024;
-my int32 $BCM2708_PERI_BASE = 0x3F000000;
-my int32 $GPIO_BASE = $BCM2708_PERI_BASE + 0x00200000;
+constant @functions = < in out alt5 alt4 alt0 alt1 alt2 alt3 >;
+
+# Base addresses for GPIO registers
+constant GP-SET = 7;
+constant GP-CLEAR = 10;
+constant GP-LEVEL = 13;
+constant GP-EVENT-DETECT = 16;
+constant GP-RISING-EDGE-DETECT = 19;
+constant GP-FALLING-EDGE-DETECT = 22;
+constant GP-PIN-HIGH-DETECT = 25;
+constant GP-PIN-LOW-DETECT = 28;
+constant GP-PIN-ASYNC-RISING-EDGE = 31;
+constant GP-PIN-ASYNC-FALLING-EDGE = 34;
+constant GP-PULL-UD-ENABLE = 37;
+constant GP-PULL-UD-ENABLE-CLOCK1 = 38;
+constant GP-PULL-UD-ENABLE-CLOCK2 = 39;
+
+constant BLOCK-SIZE = 4 * 1024;
+constant BCM2708-PERI-BASE = 0x3F000000;
+constant GPIO-BASE = BCM2708-PERI-BASE + 0x00200000;
 
 sub open(Str $name, int32 $flags) returns int32 is native {*}
 sub close(int32 $fd) returns int32 is native {*}
@@ -94,10 +111,8 @@ submethod BUILD {
 
   my int32 $fd = open('/dev/gpiomem', O_RDWR +| O_SYNC);
   die('open failed: ' ~ strerror($errno)) if $fd == -1;
-  say "Opened /dev/gpiomem with fd {$fd}";
 
-  my Pointer $null;
-  my $mem = mmap($null, $BLOCK_SIZE, PROT_READ +| PROT_WRITE, MAP_SHARED, $fd, 0);
+  my $mem = mmap(Pointer, BLOCK-SIZE, PROT_READ +| PROT_WRITE, MAP_SHARED, $fd, 0);
   die('mmap failed: ' ~ strerror($errno)) if nativecast(int32, $mem) == -1;
   close $fd;
 
@@ -108,10 +123,6 @@ method gpio() {
     $!gpio;
 }
 
-method read-word(int $word) {
-    $!gpio[$word];
-}
-
 method pin-name($pin) {
     @physNames[$pin - 1];
 }
@@ -120,7 +131,26 @@ method pin-gpio($pin) {
     @physToGPIO[$pin - 1];
 }
 
+method function-name($f) {
+    @functions[$f];
+}
+
+method read(Int $pin) {
+    my $gp = self.pin-gpio($pin);
+    $!gpio[GP-LEVEL] +& (1 +< ($gp +& 31)) > 0 ?? 1 !! 0;
+}
+
+method write(Int $pin, Bool $value) {
+    my $gp = self.pin-gpio($pin);
+    $!gpio[$value ?? GP-SET !! GP-CLEAR] = (1 +< ($gp +& 31));
+}
+
+method mode(Int $pin) {
+    my $gp = self.pin-gpio($pin);
+    $!gpio[$gp div 10] +> (($gp % 10) * 3) +& 7;
+}
+
 method close {
-  my int $status = munmap($!gpio, $BLOCK_SIZE);
+  my int $status = munmap($!gpio, BLOCK-SIZE);
   die('munmap failed: ' ~ strerror($errno)) if $status == -1;
 }

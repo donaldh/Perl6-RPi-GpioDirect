@@ -76,22 +76,23 @@ constant @physNames = <
    GND      GPIO.21
 >;
 
-constant @functions = < in out alt5 alt4 alt0 alt1 alt2 alt3 >;
+enum Function is export < in out alt5 alt4 alt0 alt1 alt2 alt3 >;
+
+enum PullMode is export < off down up >;
 
 # Base addresses for GPIO registers
 constant GP-SET = 7;
 constant GP-CLEAR = 10;
 constant GP-LEVEL = 13;
-constant GP-EVENT-DETECT = 16;
+constant GP-EVENT-DETECT-STATUS = 16;
 constant GP-RISING-EDGE-DETECT = 19;
 constant GP-FALLING-EDGE-DETECT = 22;
 constant GP-PIN-HIGH-DETECT = 25;
 constant GP-PIN-LOW-DETECT = 28;
 constant GP-PIN-ASYNC-RISING-EDGE = 31;
 constant GP-PIN-ASYNC-FALLING-EDGE = 34;
-constant GP-PULL-UD-ENABLE = 37;
-constant GP-PULL-UD-ENABLE-CLOCK1 = 38;
-constant GP-PULL-UD-ENABLE-CLOCK2 = 39;
+constant GP-PUD-MODE = 37;
+constant GP-PUD-CLOCK = 38;
 
 constant BLOCK-SIZE = 4 * 1024;
 constant BCM2708-PERI-BASE = 0x3F000000;
@@ -131,10 +132,6 @@ method pin-gpio($pin) {
     @physToGPIO[$pin - 1];
 }
 
-method function-name($f) {
-    @functions[$f];
-}
-
 method read(Int $pin) {
     my $gp = self.pin-gpio($pin);
     $!gpio[GP-LEVEL] +& (1 +< ($gp +& 31)) > 0 ?? 1 !! 0;
@@ -145,9 +142,28 @@ method write(Int $pin, Bool $value) {
     $!gpio[$value ?? GP-SET !! GP-CLEAR] = (1 +< ($gp +& 31));
 }
 
-method mode(Int $pin) {
+method function(Int $pin) returns Function {
     my $gp = self.pin-gpio($pin);
-    $!gpio[$gp div 10] +> (($gp % 10) * 3) +& 7;
+    Function($!gpio[$gp div 10] +> (($gp % 10) * 3) +& 7);
+}
+
+method set-function(Int $pin, Function $mode) {
+    my $gp = self.pin-gpio($pin);
+    my Int $register = $gp div 10;
+    my Int $shift = ($gp % 10) * 3;
+    my Int $offmask = +^ (0x7 +< $shift);
+    my Int $orig = $!gpio[$register];
+    $!gpio[$register] = ($orig +& $offmask) +| ($mode +< $shift);
+}
+
+method set-pull(Int $pin, PullMode $pud) {
+    my $gp = self.pin-gpio($pin);
+    $!gpio[GP-PUD-MODE] = $pud;
+    for 1..150 { }
+    $!gpio[GP-PUD-CLOCK] = (1 +< $gp);
+    for 1..150 { }
+    $!gpio[GP-PUD-MODE] = 0;
+    $!gpio[GP-PUD-CLOCK] = 0;
 }
 
 method close {

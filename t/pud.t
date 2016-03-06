@@ -7,9 +7,9 @@ my $pi = RasPI.new;
 say 'Pin  Name      Value';
 
 for 11, 12 -> $pin {
-    $pi.set-function($pin, out);
-    for False, True, False, True, False -> $x {
-        $pi.write($pin, $x);
+    $pi.set-function($pin, in);
+    for [ down, up, down, off ] -> $x {
+        $pi.set-pull($pin, $x);
         say sprintf('%3i  %-8s  %5i',
                     $pin, $pi.pin-name($pin), $pi.read($pin));
     }

@@ -1,34 +1,8 @@
 use v6;
 
-# void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
-# int munmap(void *addr, size_t length);
-
 unit class RPi-native;
 
 has $!gpio;
-
-use NativeCall;
-
-enum FILE_MODE (
-  O_RDWR => 0x2,
-  O_SYNC => 0o4010000
-);
-
-enum MAP_PROT (
-  PROT_READ => 0x1,
-  PROT_WRITE => 0x2,
-  PROT_EXEC => 0x4
-);
-
-enum MAP_FLAGS (
-  MAP_SHARED => 0x1,
-  MAP_PRIVATE => 0x2,
-  MAP_ANONYMOUS => do given $*DISTRO.name {
-    when 'macosx' { 0x1000 }
-    when 'raspbian' { 0x20 }
-    default { die "Unknown distro {$*DISTRO.name}" }
-  }
-);
 
 constant @physToGPIO = <
   -1  -1
@@ -76,6 +50,8 @@ constant @physNames = <
    GND      GPIO.21
 >;
 
+my @gpio-pins = grep { @physToGPIO[$_ - 1] != -1 }, 1..40;
+
 enum Function is export < in out alt5 alt4 alt0 alt1 alt2 alt3 >;
 
 enum PullMode is export < off down up >;
@@ -94,47 +70,73 @@ constant GP-PIN-ASYNC-FALLING-EDGE = 34;
 constant GP-PUD-MODE = 37;
 constant GP-PUD-CLOCK = 38;
 
-constant BLOCK-SIZE = 4 * 1024;
-constant BCM2708-PERI-BASE = 0x3F000000;
-constant GPIO-BASE = BCM2708-PERI-BASE + 0x00200000;
+enum FILE-MODE is export (
+  O-RDWR => 0x2,
+  O-SYNC => 0o4010000
+);
+
+enum MAP-PROT is export (
+  PROT-READ => 0x1,
+  PROT-WRITE => 0x2,
+  PROT-EXEC => 0x4
+);
+
+enum MAP-FLAGS  is export (
+  MAP-SHARED => 0x1,
+  MAP-PRIVATE => 0x2,
+  MAP-ANONYMOUS => do given $*DISTRO.name {
+    when 'macosx' { 0x1000 }
+    when 'raspbian' { 0x20 }
+    default { die "Unknown distro {$*DISTRO.name}" }
+  }
+);
+
+use NativeCall;
 
 sub open(Str $name, int32 $flags) returns int32 is native {*}
 sub close(int32 $fd) returns int32 is native {*}
 
+# void *mmap(void *addr, size_t length, int prot, int flags, int fd, off_t offset);
 sub mmap(Pointer $addr, int32 $length, int32 $prot, int32 $flags, int32 $fd, int32 $offset)
   returns CArray[int32] is native {*}
+
+# int munmap(void *addr, size_t length);
 sub munmap(CArray[int32], int32) returns int32 is native {*}
 
 sub strerror(int32) returns Str is native {*}
 my $errno := cglobal('libc.so.6', 'errno', int32);
 
 submethod BUILD {
+    my $fd = open('/dev/gpiomem', O-RDWR +| O-SYNC);
+    die('open failed: ' ~ strerror($errno)) if $fd == -1;
 
-  my int32 $fd = open('/dev/gpiomem', O_RDWR +| O_SYNC);
-  die('open failed: ' ~ strerror($errno)) if $fd == -1;
+    my $mem = mmap(Pointer, 4096, PROT-READ +| PROT-WRITE, MAP-SHARED, $fd, 0);
+    die('mmap failed: ' ~ strerror($errno)) if nativecast(int32, $mem) == -1;
+    close $fd;
 
-  my $mem = mmap(Pointer, BLOCK-SIZE, PROT_READ +| PROT_WRITE, MAP_SHARED, $fd, 0);
-  die('mmap failed: ' ~ strerror($errno)) if nativecast(int32, $mem) == -1;
-  close $fd;
-
-  $!gpio := $mem;
+    $!gpio := $mem;
 }
 
-method gpio() {
-    $!gpio;
+method gpio-pins() {
+    @gpio-pins;
 }
 
 method pin-name($pin) {
+    die("$pin is not a valid pin number. Pins are 1..40") unless 1 <= $pin <=40;
     @physNames[$pin - 1];
 }
 
 method pin-gpio($pin) {
-    @physToGPIO[$pin - 1];
+    die("$pin is not a valid pin number. Pins are 1..40") unless 1 <= $pin <=40;
+    my $gp = @physToGPIO[$pin - 1];
+    die("Pin $pin is not a GPIO it is {self.pin-name($pin)}") if $gp == -1;
+    $gp;
 }
 
-method read(Int $pin) {
+method read(Int $pin) returns Bool {
     my $gp = self.pin-gpio($pin);
-    $!gpio[GP-LEVEL] +& (1 +< ($gp +& 31)) > 0 ?? 1 !! 0;
+    return -1 if $gp == -1;
+    $!gpio[GP-LEVEL] +& (1 +< ($gp +& 31)) > 0 ?? True !! False;
 }
 
 method write(Int $pin, Bool $value) {
@@ -167,6 +169,6 @@ method set-pull(Int $pin, PullMode $pud) {
 }
 
 method close {
-  my int $status = munmap($!gpio, BLOCK-SIZE);
+  my int $status = munmap($!gpio, 4096);
   die('munmap failed: ' ~ strerror($errno)) if $status == -1;
 }

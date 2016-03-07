@@ -1,8 +1,8 @@
 use v6;
 
-use RasPI;
+use RPi-native;
 
-my $pi = RasPI.new;
+my $pi = RPi-native.new;
 
 say 'Pin  Name      Value  Mode';
 for 1..40 -> $pin {

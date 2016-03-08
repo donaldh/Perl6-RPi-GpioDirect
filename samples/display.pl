@@ -1,8 +1,8 @@
 use v6;
 
-use RPi-native;
+use RPi::GpioDirect;
 
-my $pi = RPi-native.new;
+my $pi = RPi::GpioDirect.new;
 
 say 'Pin  Name      Value  Mode';
 for $pi.gpio-pins -> $pin {

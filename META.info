@@ -1,11 +1,12 @@
 {
-    "name" : "RPi-native",
-    "version" : "0.1",
-    "description" : "RPi-native - Access the Raspberry Pi GPIO",
-    "author" : "Donald Hunter",
+    "name" : "RPi::GpioDirect",
+    "version" : "0.1.0",
+    "description" : "RPi::GpioDirect - Access the Raspberry Pi GPIO",
+    "authors" : "Donald Hunter",
     "provides" : {
-        "RPi-native" : "lib/RPi-native.pm"
+        "RPi::GpioDirect" : "lib/RPi/GpioDirect.pm"
     },
     "test-depends" : [ "Test" ],
-    "source-url" : "https://github.com/donaldh/perl6-raspberrypi-native.git"
+    "source-url" : "https://github.com/donaldh/perl6-rpi-gpio-direct.git",
+    "perl" : 6
 }

@@ -1,11 +1,11 @@
 use v6;
 use Test;
-use RPi-native;
+use RPi::GpioDirect;
 
 plan 20;
 
-my $pi = RPi-native.new;
-isa-ok $pi, RPi-native;
+my $pi = RPi::GpioDirect.new;
+isa-ok $pi, RPi::GpioDirect;
 
 # GPIO pins
 my @pins = $pi.gpio-pins;

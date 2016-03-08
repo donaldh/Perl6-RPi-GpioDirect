@@ -1,29 +1,29 @@
-RPi-native
-==========
+RPi::GpioDirect
+===============
 
 Access the Raspberry Pi GPIO
 
 Overview
 --------
 
-The RPi-native module provides access to the Raspberry Pi GPIO without any dependency on C libraries.
-RPi-native makes use of /dev/gpiomem so that it can run without elevated privileges.
+The RPi::GpioDirect module provides access to the Raspberry Pi GPIO without any dependency on C libraries.
+RPi::GpioDirect makes use of /dev/gpiomem so that it can run without elevated privileges.
 
-RPi-native has only been tested with a Raspberry Pi 3 but is likely to work with a Pi 2. RPi-native is also
+RPi::GpioDirect has only been tested with a Raspberry Pi 3 but is likely to work with a Pi 2. RPi::GpioDirect is also
 dependent on a kernel with /dev/gpiomem.
 
 Installation
 ------------
 
-    $ panda install RPi-native
+    $ panda install RPi::GpioDirect
 
 Usage
 -----
 
 ```
-use RPi-native;
+use RPi::GpioDirect;
 
-my $pi = RPi-native.new;
+my $pi = RPi::GpioDirect.new;
 
 say 'Pin  Name      Value  Mode';
 for $pi.gpio-pins -> $pin {

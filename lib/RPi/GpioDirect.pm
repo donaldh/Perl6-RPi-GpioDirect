@@ -1,6 +1,6 @@
 use v6;
 
-unit class RPi-native;
+unit class RPi::GpioDirect;
 
 has $!gpio;
 

@@ -52,8 +52,8 @@ constant @physNames = <
 
 my @gpio-pins = grep { @physToGPIO[$_ - 1] != -1 }, 1..40;
 
-enum Function is export < in out alt5 alt4 alt0 alt1 alt2 alt3 >;
-enum PullMode is export < off down up >;
+enum Function is export < In Out Alt5 Alt4 Alt0 Alt1 Alt2 Alt3 >;
+enum PullMode is export < None Down Up >;
 enum GpioValue is export < Off On >;
 
 # Base addresses for GPIO registers

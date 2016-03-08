@@ -27,17 +27,18 @@ my $pi = RPi-native.new;
 
 say 'Pin  Name      Value  Mode';
 for $pi.gpio-pins -> $pin {
-    say sprintf('%3i  %-8s  %5i  %4s',
+    say sprintf('%2s   %-8s  %5s  %4s',
                 $pin, $pi.pin-name($pin), $pi.read($pin), $pi.function($pin)
                );
 }
 
+say '';
 say 'Pin  Name      Value';
 for 11, 12 -> $pin {
-    $pi.set-function($pin, out);
-    for False, True, False, True -> $value {
+    $pi.set-function($pin, Out);
+    for Off, On, Off, On -> $value {
         $pi.write($pin, $value);
-        say sprintf('%3i  %-8s  %5i',
+        say sprintf('%2s   %-8s  %5s',
                     $pin, $pi.pin-name($pin), $pi.read($pin));
     }
 }

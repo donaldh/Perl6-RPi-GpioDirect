@@ -27,19 +27,19 @@ is $pi.pin-name(1), '3.3v', 'Pin 1 is 3.3v';
 is $pi.pin-name(40), 'GPIO.21', 'Pin 40 is GPIO.21';
 
 # Out
-$pi.set-function(11, out);
-is $pi.function(11), out, 'Can set pin 11 function to out';
+$pi.set-function(11, Out);
+is $pi.function(11), Out, 'Can set pin 11 function to Out';
 $pi.write(11, On);
 is $pi.read(11), On, 'Can set pin 11 value to On';
 $pi.write(11, Off);
 is $pi.read(11), Off, 'Can set pin 11 value to Off';
 
 # In
-$pi.set-function(11, in);
-is $pi.function(11), in, 'Can set pin 11 function to in';
-$pi.set-pull(11, down);
+$pi.set-function(11, In);
+is $pi.function(11), In, 'Can set pin 11 function to In';
+$pi.set-pull(11, Down);
 is $pi.read(11), Off, 'Can set pin 11 to pull down';
-$pi.set-pull(11, up);
+$pi.set-pull(11, Up);
 is $pi.read(11), On, 'Can set pin 11 to pull up';
-$pi.set-pull(11, down);
+$pi.set-pull(11, Down);
 is $pi.read(11), Off, 'Can set pin 11 back to pull down';

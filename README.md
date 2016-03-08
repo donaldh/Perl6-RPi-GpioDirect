@@ -46,4 +46,4 @@ for 11, 12 -> $pin {
 Author
 ------
 
-Donald Hunter <donald.hunter@gmail.com>
+Donald Hunter - donaldh @ #perl6

@@ -7,6 +7,6 @@
         "RPi::GpioDirect" : "lib/RPi/GpioDirect.pm"
     },
     "test-depends" : [ "Test", "Test::META" ],
-    "source-url" : "https://github.com/donaldh/Perl6-RPi-GpioDirect",
+    "source-url" : "git://github.com/donaldh/Perl6-RPi-GpioDirect.git",
     "perl" : 6
 }

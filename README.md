@@ -10,7 +10,7 @@ The RPi-native module provides access to the Raspberry Pi GPIO without any depen
 RPi-native makes use of /dev/gpiomem so that it can run without elevated privileges.
 
 RPi-native has only been tested with a Raspberry Pi 3 but is likely to work with a Pi 2. RPi-native is also
-dependend on a kernel with /dev/gpiomem.
+dependent on a kernel with /dev/gpiomem.
 
 Installation
 ------------

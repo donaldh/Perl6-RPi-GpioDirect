@@ -53,8 +53,8 @@ constant @physNames = <
 my @gpio-pins = grep { @physToGPIO[$_ - 1] != -1 }, 1..40;
 
 enum Function is export < in out alt5 alt4 alt0 alt1 alt2 alt3 >;
-
 enum PullMode is export < off down up >;
+enum GpioValue is export < Off On >;
 
 # Base addresses for GPIO registers
 constant GP-SET = 7;
@@ -133,13 +133,13 @@ method pin-gpio($pin) {
     $gp;
 }
 
-method read(Int $pin) returns Bool {
+method read(Int $pin) returns GpioValue {
     my $gp = self.pin-gpio($pin);
     return -1 if $gp == -1;
-    $!gpio[GP-LEVEL] +& (1 +< ($gp +& 31)) > 0 ?? True !! False;
+    $!gpio[GP-LEVEL] +& (1 +< ($gp +& 31)) > 0 ?? On !! Off;
 }
 
-method write(Int $pin, Bool $value) {
+method write(Int $pin, GpioValue $value) {
     my $gp = self.pin-gpio($pin);
     $!gpio[$value ?? GP-SET !! GP-CLEAR] = (1 +< ($gp +& 31));
 }
@@ -171,4 +171,5 @@ method set-pull(Int $pin, PullMode $pud) {
 method close {
   my int $status = munmap($!gpio, 4096);
   die('munmap failed: ' ~ strerror($errno)) if $status == -1;
+  $!gpio := Mu;
 }

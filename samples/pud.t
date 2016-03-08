@@ -10,7 +10,7 @@ for 11, 12 -> $pin {
     $pi.set-function($pin, in);
     for [ down, up, down, off ] -> $x {
         $pi.set-pull($pin, $x);
-        say sprintf('%3i  %-8s  %5i',
+        say sprintf('%2i   %-8s  %5s',
                     $pin, $pi.pin-name($pin), $pi.read($pin));
     }
 }

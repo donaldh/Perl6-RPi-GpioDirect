@@ -8,9 +8,9 @@ say 'Pin  Name      Value';
 
 for 11, 12 -> $pin {
     $pi.set-function($pin, out);
-    for False, True, False, True, False -> $x {
+    for Off, On, Off, On, Off -> $x {
         $pi.write($pin, $x);
-        say sprintf('%3i  %-8s  %5i',
+        say sprintf('%2i   %-8s  %5s',
                     $pin, $pi.pin-name($pin), $pi.read($pin));
     }
 }
